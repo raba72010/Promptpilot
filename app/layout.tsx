@@ -31,7 +31,7 @@ export const metadata: Metadata = {
       "Describe what you want once. Get the best prompt and tool recommendation — instantly.",
     images: ["/og-image.png"],
   },
-  metadataBase: new URL("https://promptpilot.vercel.app"),
+  metadataBase: new URL("https://promptpilot-phi.vercel.app"),
 };
 
 export default function RootLayout({
