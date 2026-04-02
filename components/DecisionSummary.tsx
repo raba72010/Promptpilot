@@ -1,0 +1,75 @@
+import { CheckCircle2 } from "lucide-react";
+import type { ToolRecommendation, IntentResult } from "@/lib/prompt-engine";
+import { cn } from "@/lib/utils";
+
+const INTENT_LABELS: Record<string, string> = {
+  coding: "Code",
+  writing: "Writing",
+  research: "Research",
+  image: "Image",
+  video: "Video",
+  system_prompt: "System Prompt",
+  agent_instructions: "Agent Instructions",
+};
+
+const CONFIDENCE_STYLES = {
+  low: { badge: "bg-yellow-100 text-yellow-800 border-yellow-200", label: "Low confidence" },
+  medium: { badge: "bg-blue-100 text-blue-800 border-blue-200", label: "Medium confidence" },
+  high: { badge: "bg-green-100 text-green-800 border-green-200", label: "High confidence" },
+};
+
+interface DecisionSummaryProps {
+  intent: IntentResult;
+  recommendation: ToolRecommendation;
+}
+
+export function DecisionSummary({ intent, recommendation }: DecisionSummaryProps) {
+  const { badge, label } = CONFIDENCE_STYLES[recommendation.confidence];
+  const intentLabel = INTENT_LABELS[intent.intent] ?? intent.intent;
+
+  return (
+    <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+      <div className="flex flex-wrap items-start gap-3">
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-400">
+            Recommended Tool
+          </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-xl bg-gray-900 px-4 py-1.5 text-sm font-semibold text-white">
+              {recommendation.primaryTool}
+            </span>
+            <span
+              className={cn(
+                "rounded-full border px-3 py-1 text-xs font-medium",
+                badge
+              )}
+            >
+              {label}
+            </span>
+            <span className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1 text-xs text-gray-500">
+              {intentLabel}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {recommendation.alternativeTool && (
+        <p className="mt-3 text-xs text-gray-400">
+          Alternative:{" "}
+          <span className="font-medium text-gray-500">
+            {recommendation.alternativeTool}
+          </span>
+        </p>
+      )}
+
+      <div className="mt-4 space-y-2">
+        {recommendation.reasoning.map((reason, i) => (
+          <div key={i} className="flex items-start gap-2.5">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-gray-400" />
+            <p className="text-sm text-gray-600">{reason}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
