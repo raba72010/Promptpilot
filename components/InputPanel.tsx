@@ -12,9 +12,10 @@ import type { UserInput, ToolOverride, OutputTypeOverride } from "@/lib/prompt-e
 interface InputPanelProps {
   onSubmit: (input: UserInput) => void;
   isLoading: boolean;
+  submitError?: string | null;
 }
 
-export function InputPanel({ onSubmit, isLoading }: InputPanelProps) {
+export function InputPanel({ onSubmit, isLoading, submitError }: InputPanelProps) {
   const [idea, setIdea] = useState("");
   const [toolOverride, setToolOverride] = useState<ToolOverride>("auto");
   const [outputTypeOverride, setOutputTypeOverride] = useState<OutputTypeOverride>("auto");
@@ -163,6 +164,12 @@ export function InputPanel({ onSubmit, isLoading }: InputPanelProps) {
               </>
             )}
           </Button>
+
+          {submitError && (
+            <p className="mt-3 text-center text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          )}
 
           <p className="mt-3 text-center text-xs text-gray-400">
             Press{" "}
