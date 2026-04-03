@@ -10,7 +10,13 @@ export type ProviderId =
   | "together"
   | "deepseek"
   | "xai"
-  | "cohere";
+  | "cohere"
+  // Chinese providers
+  | "qwen"
+  | "moonshot"
+  | "zhipu"
+  | "baidu"
+  | "doubao";
 
 export interface ProviderMeta {
   id: ProviderId;
@@ -179,10 +185,77 @@ export const PROVIDERS: ProviderMeta[] = [
     openAICompatibleBaseUrl: "https://api.cohere.ai/compatibility/v1",
     freeTier: false,
   },
+
+  // ── Chinese providers ───────────────────────────────────────────────────────
+  {
+    id: "qwen",
+    name: "Qwen Max (Alibaba)",
+    label: "Qwen",
+    model: "qwen-max",
+    apiKeyLabel: "DashScope API Key",
+    apiKeyPlaceholder: "sk-...",
+    apiKeyUrl: "https://dashscope.aliyuncs.com/",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+    freeTier: false,
+  },
+  {
+    id: "moonshot",
+    name: "Moonshot v1 (Kimi)",
+    label: "Kimi",
+    model: "moonshot-v1-8k",
+    apiKeyLabel: "Moonshot API Key",
+    apiKeyPlaceholder: "sk-...",
+    apiKeyUrl: "https://platform.moonshot.cn/console/api-keys",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://api.moonshot.cn/v1",
+    freeTier: true,
+    freeTierNote: "Free trial credits on signup",
+  },
+  {
+    id: "zhipu",
+    name: "GLM-4 (Zhipu AI)",
+    label: "GLM-4",
+    model: "glm-4",
+    apiKeyLabel: "Zhipu API Key",
+    apiKeyPlaceholder: "...",
+    apiKeyUrl: "https://open.bigmodel.cn/usercenter/apikeys",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://open.bigmodel.cn/api/paas/v4",
+    freeTier: true,
+    freeTierNote: "Free trial quota on signup",
+  },
+  {
+    id: "baidu",
+    name: "ERNIE 4.0 (Baidu)",
+    label: "ERNIE",
+    model: "ernie-4.0-8k",
+    apiKeyLabel: "Qianfan API Key",
+    apiKeyPlaceholder: "...",
+    apiKeyUrl: "https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://qianfan.baidubce.com/v2",
+    freeTier: false,
+  },
+  {
+    id: "doubao",
+    name: "Doubao Pro (ByteDance)",
+    label: "Doubao",
+    model: "doubao-pro-32k",
+    apiKeyLabel: "Ark API Key",
+    apiKeyPlaceholder: "...",
+    apiKeyUrl: "https://console.volcengine.com/ark/region:ark+cn-beijing/apiKey",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://ark.cn-beijing.volces.com/api/v3",
+    freeTier: false,
+  },
 ];
 
-export const FREE_PROVIDERS = PROVIDERS.filter((p) => p.freeTier);
-export const PAID_PROVIDERS = PROVIDERS.filter((p) => !p.freeTier);
+const CHINESE_IDS: ProviderId[] = ["qwen", "moonshot", "zhipu", "baidu", "doubao"];
+
+export const CHINESE_PROVIDERS = PROVIDERS.filter((p) => CHINESE_IDS.includes(p.id));
+export const FREE_PROVIDERS = PROVIDERS.filter((p) => p.freeTier && !CHINESE_IDS.includes(p.id));
+export const PAID_PROVIDERS = PROVIDERS.filter((p) => !p.freeTier && !CHINESE_IDS.includes(p.id));
 
 export const DEFAULT_PROVIDER_ID: ProviderId = "groq";
 

@@ -11,7 +11,7 @@ import {
   SelectGroup,
   SelectLabel,
 } from "@/components/ui/select";
-import { FREE_PROVIDERS, PAID_PROVIDERS, DEFAULT_PROVIDER_ID } from "@/lib/providers";
+import { FREE_PROVIDERS, PAID_PROVIDERS, CHINESE_PROVIDERS, DEFAULT_PROVIDER_ID } from "@/lib/providers";
 import type { ProviderId } from "@/lib/providers";
 import { cn } from "@/lib/utils";
 
@@ -77,7 +77,7 @@ export function ProviderSettings({ onChange }: ProviderSettingsProps) {
     onChange({ providerId, apiKey: value });
   }
 
-  const allProviders = [...FREE_PROVIDERS, ...PAID_PROVIDERS];
+  const allProviders = [...FREE_PROVIDERS, ...PAID_PROVIDERS, ...CHINESE_PROVIDERS];
   const provider = allProviders.find((p) => p.id === providerId) ?? FREE_PROVIDERS[0];
   const currentKey = apiKeys[providerId] ?? "";
   const hasKey = currentKey.trim().length > 0;
@@ -149,6 +149,24 @@ export function ProviderSettings({ onChange }: ProviderSettingsProps) {
                   {PAID_PROVIDERS.map((p) => (
                     <SelectItem key={p.id} value={p.id}>
                       <div className="flex items-center gap-2 w-full">
+                        <span>{p.name}</span>
+                        {apiKeys[p.id]?.trim() && (
+                          <span className="ml-auto text-xs text-green-600 font-medium">✓</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+                <SelectGroup>
+                  <SelectLabel>Chinese models</SelectLabel>
+                  {CHINESE_PROVIDERS.map((p) => (
+                    <SelectItem key={p.id} value={p.id}>
+                      <div className="flex items-center gap-2 w-full">
+                        {p.freeTier && (
+                          <span className="rounded-full bg-green-100 text-green-700 px-1.5 py-0.5 text-[10px] font-semibold leading-none">
+                            FREE
+                          </span>
+                        )}
                         <span>{p.name}</span>
                         {apiKeys[p.id]?.trim() && (
                           <span className="ml-auto text-xs text-green-600 font-medium">✓</span>
