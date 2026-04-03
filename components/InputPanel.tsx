@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ChevronDown, ChevronUp, Sparkles, Loader2, Zap, ArrowRight } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Send } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { ToolSelector } from "@/components/ToolSelector";
 import { OutputTypeSelector } from "@/components/OutputTypeSelector";
@@ -10,12 +10,13 @@ import type { UserInput, ToolOverride, OutputTypeOverride } from "@/lib/prompt-e
 import type { ProviderConfig } from "@/components/ProviderSettings";
 import { cn } from "@/lib/utils";
 
+// Short, scannable labels → prevent chip overflow
 const EXAMPLES = [
-  { label: "SaaS app",    text: "Build a Next.js SaaS app with auth, Stripe, and a dashboard" },
-  { label: "Cold email",  text: "Write a cold outreach email for a B2B software product" },
-  { label: "Image gen",   text: "Generate a photorealistic image of a futuristic city at dusk" },
-  { label: "System prompt", text: "Create a system prompt for a customer support AI agent" },
-  { label: "Research",    text: "Research and compare the top 5 vector databases for production use" },
+  { label: "SaaS boilerplate",  text: "Build a Next.js SaaS app with auth, Stripe, and a dashboard" },
+  { label: "Cold email",        text: "Write a cold outreach email for a B2B software product" },
+  { label: "Image prompt",      text: "Generate a photorealistic image of a futuristic city at dusk" },
+  { label: "System prompt",     text: "Create a system prompt for a customer support AI agent" },
+  { label: "Research brief",    text: "Research and compare the top 5 vector databases for production use" },
 ];
 
 const MAX_CHARS = 2000;
@@ -38,15 +39,15 @@ export function InputPanel({
   hasApiKey,
 }: InputPanelProps) {
   const [idea, setIdea] = useState("");
-  const [toolOverride, setToolOverride] = useState<ToolOverride>("auto");
+  const [toolOverride, setToolOverride]       = useState<ToolOverride>("auto");
   const [outputTypeOverride, setOutputTypeOverride] = useState<OutputTypeOverride>("auto");
   const [contextText, setContextText] = useState("");
   const [contextOpen, setContextOpen] = useState(false);
   const [fileContent, setFileContent] = useState<string | null>(null);
-  const [fileName, setFileName] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isMac, setIsMac] = useState(true);
-  const [focused, setFocused] = useState(false);
+  const [fileName, setFileName]       = useState<string | null>(null);
+  const [error, setError]             = useState<string | null>(null);
+  const [isMac, setIsMac]             = useState(true);
+  const [focused, setFocused]         = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -62,7 +63,7 @@ export function InputPanel({
       return;
     }
     if (!hasApiKey) {
-      setError("Open Settings ⚙ (top right) and add a free API key first.");
+      setError("Open Settings ⚙ (top right) and paste a free API key first.");
       return;
     }
     setError(null);
@@ -79,65 +80,97 @@ export function InputPanel({
   }
 
   const charCount = idea.length;
-  const charOver = charCount > MAX_CHARS;
+  const charOver  = charCount > MAX_CHARS;
 
   return (
     <main className="page-bg min-h-screen flex flex-col items-center justify-center px-4 py-16 fade-in">
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-xl">
 
-        {/* Logo pill */}
-        <div className="flex justify-center mb-10">
-          <div className="inline-flex items-center gap-2 rounded-full border border-violet-200 bg-white/70 backdrop-blur-sm px-4 py-1.5 shadow-sm">
-            <div className="h-5 w-5 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center">
-              <Zap className="h-3 w-3 text-white" />
-            </div>
-            <span className="text-xs font-semibold tracking-widest text-gray-600 uppercase">PromptPilot</span>
+        {/* ── Wordmark ─────────────────────────────── */}
+        <div className="flex items-center justify-center gap-2 mb-10">
+          {/* Square logotype — like a rubber stamp, not a startup neon pill */}
+          <div
+            className="h-7 w-7 rounded-md flex items-center justify-center text-white text-xs font-bold tracking-tight select-none"
+            style={{ background: "var(--brand)", letterSpacing: "-0.02em" }}
+          >
+            PP
           </div>
+          <span
+            className="text-sm font-semibold tracking-tight select-none"
+            style={{ color: "var(--fg-strong)" }}
+          >
+            PromptPilot
+          </span>
+          {/* Editorial tagline — horizontal rule style */}
+          <span className="hidden sm:block h-px w-8 bg-[var(--border-strong)]" />
+          <span className="hidden sm:block text-xs" style={{ color: "var(--fg-faint)" }}>
+            Prompt engineering, done right
+          </span>
         </div>
 
-        {/* Headline */}
-        <div className="text-center mb-10 space-y-3">
-          <h1 className="text-5xl sm:text-[58px] font-semibold tracking-tight leading-[1.1]">
-            <span className="gradient-text">Perfect your AI request</span>
+        {/* ── Headline ─────────────────────────────── */}
+        <div className="text-center mb-8">
+          <h1
+            className="text-[44px] sm:text-[52px] font-semibold leading-[1.1] tracking-[-0.03em]"
+            style={{ color: "var(--fg-strong)" }}
+          >
+            Turn a rough idea
             <br />
-            <span className="gradient-text-muted">before you hit send</span>
+            <span style={{ color: "var(--brand)" }}>into the right prompt.</span>
           </h1>
-          <p className="mt-5 text-base text-gray-500 max-w-sm mx-auto leading-relaxed">
-            Describe your goal in plain language. Get an expert-crafted prompt and the right AI tool — instantly.
+          <p
+            className="mt-4 text-[15px] leading-relaxed max-w-sm mx-auto"
+            style={{ color: "var(--fg-muted)" }}
+          >
+            Describe what you want in plain language. PromptPilot detects intent, picks the right AI tool, and writes the prompt for you.
           </p>
         </div>
 
-        {/* API key nudge */}
+        {/* ── API key nudge ─────────────────────────── */}
         {!hasApiKey && (
-          <div className="mb-5 flex items-center gap-3 rounded-2xl border border-amber-200 bg-amber-50/80 backdrop-blur-sm px-4 py-3 text-sm text-amber-800 shadow-sm fade-in-fast">
-            <span className="h-2 w-2 rounded-full bg-amber-400 shrink-0 animate-pulse" />
+          <div
+            className="mb-5 flex items-start gap-3 rounded-xl px-4 py-3 text-sm fade-in-fast"
+            style={{
+              background: "#FFFBEB",
+              border: "1px solid #FDE68A",
+              color: "var(--brand-text)"
+            }}
+          >
+            <span className="mt-0.5 h-4 w-4 shrink-0 rounded-full border-2 border-[#D97706] flex items-center justify-center text-[10px] font-bold" style={{ color: "#D97706" }}>!</span>
             <span>
-              Click <strong>⚙</strong> top-right to add a free API key (Groq, Gemini, etc.) and get started.
+              Click <strong>⚙</strong> top-right to add a free API key (Groq or Gemini are free to start).
             </span>
           </div>
         )}
 
-        {/* Form card */}
-        <div className={cn(
-          "rounded-3xl border bg-white/80 backdrop-blur-sm shadow-sm transition-shadow duration-300",
-          focused ? "shadow-[0_0_0_3px_rgba(139,92,246,0.12),0_8px_32px_rgba(0,0,0,0.08)]" : "shadow-[0_2px_16px_rgba(0,0,0,0.06)]",
-          "border-gray-200"
-        )}>
-          <form onSubmit={handleSubmit} noValidate className="p-5">
+        {/* ── Input card ───────────────────────────── */}
+        <div
+          className="rounded-2xl overflow-hidden transition-shadow duration-200"
+          style={{
+            background: "var(--bg-card)",
+            border: "1px solid var(--border)",
+            boxShadow: focused
+              ? "var(--shadow-input-focus)"
+              : "var(--shadow-card)",
+          }}
+        >
+          <form onSubmit={handleSubmit} noValidate>
 
-            {/* Textarea */}
-            <div className="relative">
+            {/* Textarea — borderless inside card */}
+            <div className="relative px-4 pt-4 pb-2">
               <Textarea
                 ref={textareaRef}
                 value={idea}
                 onChange={(e) => { setIdea(e.target.value); if (error) setError(null); }}
                 onFocus={() => setFocused(true)}
                 onBlur={() => setFocused(false)}
-                placeholder="Build an app, generate an image, write content, create a system prompt…"
+                placeholder="What do you want to create or accomplish?"
                 className={cn(
-                  "min-h-[148px] text-[15px] leading-relaxed border-0 shadow-none bg-transparent focus-visible:ring-0 resize-none pb-7 px-0 placeholder:text-gray-400",
+                  "min-h-[128px] text-[15px] leading-relaxed border-0 shadow-none bg-transparent",
+                  "focus-visible:ring-0 resize-none px-0 placeholder:text-[var(--fg-faint)]",
                   charOver && "text-red-600"
                 )}
+                style={{ color: "var(--fg-strong)" }}
                 aria-label="Describe your idea"
                 aria-invalid={!!error}
                 disabled={isLoading}
@@ -147,28 +180,39 @@ export function InputPanel({
                   }
                 }}
               />
-              <div className={cn(
-                "absolute bottom-2 right-0 text-xs tabular-nums pointer-events-none transition-colors",
-                charOver ? "text-red-500 font-medium" : charCount > 1600 ? "text-amber-500" : "text-gray-300"
-              )}>
-                {charCount > 0 && `${charCount}/${MAX_CHARS}`}
-              </div>
+              {/* Char counter */}
+              {charCount > 0 && (
+                <div
+                  className="absolute bottom-3 right-4 text-xs tabular-nums pointer-events-none"
+                  style={{ color: charOver ? "#dc2626" : charCount > 1600 ? "#d97706" : "var(--fg-faint)" }}
+                >
+                  {charCount}/{MAX_CHARS}
+                </div>
+              )}
             </div>
 
-            {/* Divider */}
-            <div className="h-px bg-gray-100 -mx-5 mb-3" />
+            {/* Thin rule */}
+            <div style={{ height: "1px", background: "var(--border)" }} />
 
             {/* Controls row */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2 px-3 py-2.5">
               <ToolSelector value={toolOverride} onChange={setToolOverride} />
               <OutputTypeSelector value={outputTypeOverride} onChange={setOutputTypeOverride} />
               <button
                 type="button"
                 onClick={() => setContextOpen((o) => !o)}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-500 hover:bg-gray-50 hover:text-gray-800 hover:border-gray-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 h-9"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium h-8",
+                  "transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                )}
+                style={{
+                  borderColor: contextOpen ? "var(--border-strong)" : "var(--border)",
+                  background: contextOpen ? "var(--bg-subtle)" : "transparent",
+                  color: "var(--fg-muted)"
+                }}
                 aria-expanded={contextOpen}
               >
-                {contextOpen ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+                {contextOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
                 Context
               </button>
               <FileUpload
@@ -177,76 +221,113 @@ export function InputPanel({
                 currentFile={fileName ? { name: fileName } : null}
               />
 
-              {/* Active provider pill */}
+              {/* Active provider — right-aligned */}
               {hasApiKey && (
-                <span className="ml-auto inline-flex items-center gap-1.5 rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-medium text-violet-600">
-                  <span className="h-1.5 w-1.5 rounded-full bg-violet-500" />
+                <span
+                  className="ml-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium"
+                  style={{
+                    background: "var(--brand-light)",
+                    color: "var(--brand-text)",
+                    border: "1px solid var(--brand-mid)"
+                  }}
+                >
+                  <span
+                    className="h-1.5 w-1.5 rounded-full shrink-0"
+                    style={{ background: "var(--brand)" }}
+                  />
                   {activeProviderLabel}
                 </span>
               )}
             </div>
 
-            {/* Optional context */}
+            {/* Optional context textarea */}
             {contextOpen && (
-              <div className="mt-3 fade-in-fast">
+              <div className="px-4 pb-3 fade-in-fast">
                 <Textarea
                   value={contextText}
                   onChange={(e) => setContextText(e.target.value)}
                   placeholder="Paste background info, constraints, style notes, or technical details…"
-                  className="min-h-[88px] text-sm bg-gray-50 border-gray-200 rounded-xl"
+                  className="min-h-[80px] text-sm rounded-xl"
+                  style={{
+                    background: "var(--bg-subtle)",
+                    borderColor: "var(--border)",
+                    color: "var(--fg-default)"
+                  }}
                   aria-label="Optional context"
                   disabled={isLoading}
                 />
-                <p className="mt-1.5 text-xs text-gray-400">
-                  More context = more accurate prompt. You can also upload a file above.
+                <p className="mt-1.5 text-xs" style={{ color: "var(--fg-faint)" }}>
+                  More context = more accurate prompt.
                 </p>
               </div>
             )}
 
-            {/* Error */}
+            {/* Inline error */}
             {error && (
-              <p className="mt-3 text-sm text-red-600 flex items-center gap-1.5 fade-in-fast" role="alert">
+              <p className="px-4 pb-3 text-sm text-red-600 fade-in-fast flex items-center gap-1.5" role="alert">
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500 shrink-0" />
                 {error}
               </p>
             )}
 
-            {/* Submit button */}
-            <button
-              type="submit"
-              disabled={isLoading || charOver}
-              className={cn(
-                "btn-glow mt-4 w-full h-12 rounded-2xl text-sm font-semibold text-white",
-                "inline-flex items-center justify-center gap-2",
-                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500 focus-visible:ring-offset-2"
-              )}
-            >
-              {isLoading ? (
-                <><Loader2 className="h-4 w-4 animate-spin" />Optimizing your request…</>
-              ) : (
-                <><Sparkles className="h-4 w-4" />Perfect My Request<ArrowRight className="h-3.5 w-3.5 ml-1 opacity-70" /></>
-              )}
-            </button>
+            {/* Thin rule */}
+            <div style={{ height: "1px", background: "var(--border)" }} />
+
+            {/* Submit footer */}
+            <div className="flex items-center justify-between gap-3 px-4 py-3">
+              <span className="text-xs" style={{ color: "var(--fg-faint)" }}>
+                {isMac ? "⌘↵" : "Ctrl+↵"} to submit
+              </span>
+              <button
+                type="submit"
+                disabled={isLoading || charOver}
+                className="btn-primary inline-flex items-center justify-center gap-2 rounded-xl px-5 h-9 text-sm"
+              >
+                {isLoading ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" />Working…</>
+                ) : (
+                  <><Send className="h-3.5 w-3.5" />Optimize Prompt</>
+                )}
+              </button>
+            </div>
 
             {submitError && (
-              <p className="mt-3 text-center text-sm text-red-600 fade-in-fast" role="alert">{submitError}</p>
+              <p className="px-4 pb-3 text-sm text-red-600 text-center fade-in-fast" role="alert">
+                {submitError}
+              </p>
             )}
           </form>
         </div>
 
-        {/* Example chips */}
+        {/* ── Example chips (below card) ─────────────── */}
         {!idea && (
-          <div className="mt-6 fade-in">
-            <p className="text-xs text-gray-400 text-center mb-3">Try an example</p>
+          <div className="mt-5 fade-in">
+            <p className="text-xs text-center mb-2.5" style={{ color: "var(--fg-faint)" }}>
+              Not sure where to start? Pick an example:
+            </p>
             <div className="flex flex-wrap justify-center gap-2">
               {EXAMPLES.map((ex) => (
                 <button
                   key={ex.label}
                   type="button"
                   onClick={() => handleExample(ex.text)}
-                  className="group inline-flex items-center gap-1.5 rounded-full border border-gray-200 bg-white/70 backdrop-blur-sm px-3.5 py-1.5 text-xs text-gray-500 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-700 transition-all duration-150 shadow-sm"
+                  className="rounded-lg border px-3 py-1.5 text-xs font-medium transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
+                  style={{
+                    borderColor: "var(--border)",
+                    background: "var(--bg-card)",
+                    color: "var(--fg-muted)",
+                  }}
+                  onMouseEnter={e => {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--brand)";
+                    (e.currentTarget as HTMLButtonElement).style.color = "var(--brand-text)";
+                    (e.currentTarget as HTMLButtonElement).style.background = "var(--brand-light)";
+                  }}
+                  onMouseLeave={e => {
+                    (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)";
+                    (e.currentTarget as HTMLButtonElement).style.color = "var(--fg-muted)";
+                    (e.currentTarget as HTMLButtonElement).style.background = "var(--bg-card)";
+                  }}
                 >
-                  <span className="h-1 w-1 rounded-full bg-gray-300 group-hover:bg-violet-400 transition-colors" />
                   {ex.label}
                 </button>
               ))}
@@ -254,9 +335,9 @@ export function InputPanel({
           </div>
         )}
 
-        {/* Keyboard hint */}
-        <p className="mt-5 text-center text-xs text-gray-400">
-          {isMac ? "⌘↵" : "Ctrl+↵"} to submit &nbsp;·&nbsp; Your key stays in your browser
+        {/* ── Footer note ───────────────────────────── */}
+        <p className="mt-6 text-center text-xs" style={{ color: "var(--fg-faint)" }}>
+          Your API key never leaves your browser
         </p>
 
       </div>

@@ -7,182 +7,118 @@
 
 /* ─── Design tokens ────────────────────────────────────────────── */
 :root {
-  --background: #fafafa;
-  --foreground: #0a0a0a;
+  /* Background: warm off-white — like a quality notebook */
+  --bg: #F7F6F3;
+  --bg-card: #FFFFFF;
+  --bg-subtle: #F2F1EE;
 
-  /* Purple/violet brand palette */
-  --brand-50:  #f5f3ff;
-  --brand-100: #ede9fe;
-  --brand-200: #ddd6fe;
-  --brand-500: #8b5cf6;
-  --brand-600: #7c3aed;
-  --brand-700: #6d28d9;
+  /* Foreground */
+  --fg-strong:  #0D0D0D;
+  --fg-default: #1C1C1C;
+  --fg-muted:   #6B6B6B;
+  --fg-faint:   #A8A8A8;
 
-  /* Mesh glow colors */
-  --glow-violet: rgba(139, 92, 246, 0.12);
-  --glow-indigo: rgba(99, 102, 241, 0.08);
-  --glow-pink:   rgba(236, 72, 153, 0.06);
+  /* Brand: amber — warm, intellectual, decisively not purple */
+  --brand:       #C2620A;   /* amber-700 equivalent */
+  --brand-light: #FEF3C7;   /* amber-100 */
+  --brand-mid:   #FDE68A;   /* amber-200 */
+  --brand-hover: #B45309;   /* amber-800 */
+  --brand-text:  #92400E;   /* amber-900 */
+
+  /* Borders */
+  --border:        #E5E3DC;
+  --border-strong: #D1CEC5;
+
+  /* Shadows (warm-tinted, not blue-grey) */
+  --shadow-card: 0 1px 3px rgba(20,16,8,0.04), 0 4px 12px rgba(20,16,8,0.05);
+  --shadow-input-focus: 0 0 0 3px rgba(194,98,10,0.12), 0 1px 3px rgba(20,16,8,0.06);
 }
 
 /* ─── Base ─────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--bg);
+  color: var(--fg-default);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Subtle warm dot-grid texture */
+  background-image: radial-gradient(circle, #C8C4BC 1px, transparent 1px);
+  background-size: 24px 24px;
+  background-attachment: fixed;
 }
 
-html {
-  scroll-behavior: smooth;
-}
+button { cursor: pointer; }
+:focus-visible { outline-offset: 2px; }
 
-button {
-  cursor: pointer;
-}
-
-:focus-visible {
-  outline-offset: 2px;
-}
-
-/* ─── Mesh gradient background ─────────────────────────────────── */
+/* ─── Page wrapper ──────────────────────────────────────────────── */
+/* No glowing mesh — just the quiet grid above */
 .page-bg {
-  position: relative;
-  isolation: isolate;
-}
-.page-bg::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background:
-    radial-gradient(ellipse 80% 60% at 50% -10%, var(--glow-violet), transparent 70%),
-    radial-gradient(ellipse 50% 40% at 85% 20%, var(--glow-indigo), transparent 60%),
-    radial-gradient(ellipse 40% 35% at 10% 70%, var(--glow-pink), transparent 60%),
-    #fafafa;
-  pointer-events: none;
+  min-height: 100vh;
 }
 
-/* ─── Gradient text ─────────────────────────────────────────────── */
-.gradient-text {
-  background: linear-gradient(135deg, #0a0a0a 0%, #3b3b3b 50%, #6d28d9 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* ─── Primary CTA button ────────────────────────────────────────── */
+/* Solid amber — confident, no glow theatrics */
+.btn-primary {
+  background: var(--brand);
+  color: #fff;
+  border: 1px solid var(--brand-hover);
+  box-shadow: 0 1px 2px rgba(20,16,8,0.12), inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+  font-weight: 600;
+  letter-spacing: 0.01em;
 }
-
-.gradient-text-muted {
-  background: linear-gradient(135deg, #9ca3af 0%, #c4b5fd 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* ─── Glow button ───────────────────────────────────────────────── */
-.btn-glow {
-  position: relative;
-  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
-  box-shadow:
-    0 0 0 1px rgba(124, 58, 237, 0.3),
-    0 4px 16px rgba(124, 58, 237, 0.35),
-    0 1px 3px rgba(0,0,0,0.1);
-  transition: box-shadow 0.2s ease, transform 0.1s ease;
-}
-.btn-glow:hover:not(:disabled) {
-  box-shadow:
-    0 0 0 1px rgba(124, 58, 237, 0.4),
-    0 6px 24px rgba(124, 58, 237, 0.45),
-    0 2px 6px rgba(0,0,0,0.12);
+.btn-primary:hover:not(:disabled) {
+  background: var(--brand-hover);
+  box-shadow: 0 2px 6px rgba(20,16,8,0.16), inset 0 1px 0 rgba(255,255,255,0.08);
   transform: translateY(-1px);
 }
-.btn-glow:active:not(:disabled) {
+.btn-primary:active:not(:disabled) {
   transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(20,16,8,0.12);
 }
-.btn-glow:disabled {
-  opacity: 0.55;
+.btn-primary:disabled {
+  opacity: 0.45;
   box-shadow: none;
+  transform: none;
 }
 
-/* ─── Glass card ────────────────────────────────────────────────── */
-.glass-card {
-  background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.9);
-  box-shadow:
-    0 1px 3px rgba(0,0,0,0.04),
-    0 4px 16px rgba(0,0,0,0.04),
-    inset 0 1px 0 rgba(255,255,255,0.9);
-}
-
-/* ─── Brand border gradient ────────────────────────────────────── */
-.border-brand-gradient {
-  position: relative;
-}
-.border-brand-gradient::before {
-  content: "";
-  position: absolute;
-  inset: -1px;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, #c4b5fd, #818cf8, #c4b5fd);
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-.border-brand-gradient:focus-within::before,
-.border-brand-gradient:hover::before {
-  opacity: 1;
-}
-
-/* ─── Intent color chips ───────────────────────────────────────── */
-.intent-coding        { --intent-bg: #eff6ff; --intent-text: #1d4ed8; --intent-border: #bfdbfe; --intent-dot: #3b82f6; }
-.intent-writing       { --intent-bg: #fdf4ff; --intent-text: #7e22ce; --intent-border: #e9d5ff; --intent-dot: #a855f7; }
-.intent-research      { --intent-bg: #ecfdf5; --intent-text: #065f46; --intent-border: #a7f3d0; --intent-dot: #10b981; }
-.intent-image         { --intent-bg: #fff7ed; --intent-text: #c2410c; --intent-border: #fed7aa; --intent-dot: #f97316; }
-.intent-video         { --intent-bg: #fef2f2; --intent-text: #b91c1c; --intent-border: #fecaca; --intent-dot: #ef4444; }
-.intent-system_prompt { --intent-bg: #f0fdf4; --intent-text: #166534; --intent-border: #bbf7d0; --intent-dot: #22c55e; }
-.intent-agent_instructions { --intent-bg: #f0f9ff; --intent-text: #0369a1; --intent-border: #bae6fd; --intent-dot: #0ea5e9; }
+/* ─── Intent color tokens ───────────────────────────────────────── */
+/* Deliberately desaturated/muted — not neon */
+.intent-coding              { --intent-bg: #F0F4FF; --intent-text: #2B4BAB; --intent-border: #C7D4F5; }
+.intent-writing             { --intent-bg: #FFF8F0; --intent-text: #9A3412; --intent-border: #F5D5B8; }
+.intent-research            { --intent-bg: #F0FAF4; --intent-text: #166534; --intent-border: #BBE8CB; }
+.intent-image               { --intent-bg: #FFF7ED; --intent-text: #92400E; --intent-border: #F6D9AA; }
+.intent-video               { --intent-bg: #FFF1F1; --intent-text: #9B1C1C; --intent-border: #F5C3C3; }
+.intent-system_prompt       { --intent-bg: #F0FDF4; --intent-text: #14532D; --intent-border: #BBF1CC; }
+.intent-agent_instructions  { --intent-bg: #F0F9FF; --intent-text: #075985; --intent-border: #BAE0F5; }
 
 /* ─── Animations ────────────────────────────────────────────────── */
 @keyframes fade-in {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes fade-in-fast {
-  from { opacity: 0; transform: translateY(5px); }
+  from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 @keyframes scale-in {
-  from { opacity: 0; transform: scale(0.97); }
+  from { opacity: 0; transform: scale(0.975); }
   to   { opacity: 1; transform: scale(1); }
-}
-@keyframes shimmer {
-  0%   { background-position: -200% center; }
-  100% { background-position:  200% center; }
 }
 
 .fade-in      { animation: fade-in      0.3s ease-out both; }
 .fade-in-fast { animation: fade-in-fast 0.15s ease-out both; }
 .scale-in     { animation: scale-in     0.25s ease-out both; }
 
-/* Loading shimmer */
-.shimmer {
-  background: linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.08) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 1.8s infinite;
-}
-
 /* ─── Scrollbar ─────────────────────────────────────────────────── */
 ::-webkit-scrollbar        { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track  { background: transparent; }
-::-webkit-scrollbar-thumb  { background: #e2e8f0; border-radius: 99px; }
-::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+::-webkit-scrollbar-thumb  { background: var(--border-strong); border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #b0ada5; }
 
-/* ─── Radix Select portal ───────────────────────────────────────── */
-[data-radix-popper-content-wrapper] {
-  z-index: 50 !important;
-}
+/* ─── Radix portal ──────────────────────────────────────────────── */
+[data-radix-popper-content-wrapper] { z-index: 50 !important; }

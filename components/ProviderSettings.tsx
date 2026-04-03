@@ -91,21 +91,22 @@ export function ProviderSettings({ onChange }: ProviderSettingsProps) {
         aria-label="AI provider settings"
         className={cn(
           "inline-flex items-center justify-center rounded-xl w-10 h-10 border transition-all duration-200 shadow-sm",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
-          hasKey
-            ? "border-violet-200 bg-violet-50/80 backdrop-blur-sm text-violet-600 hover:bg-violet-100 hover:shadow-md"
-            : "border-gray-200 bg-white/80 backdrop-blur-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-md"
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand)]"
         )}
+        style={hasKey
+          ? { borderColor: "var(--brand-mid)", background: "var(--brand-light)", color: "var(--brand)" }
+          : { borderColor: "var(--border)", background: "var(--bg-card)", color: "var(--fg-muted)" }
+        }
       >
         <Settings className="h-4 w-4" />
         {!hasKey && (
-          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-yellow-400 border border-white" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full border-2 border-white" style={{ background: "var(--brand)" }} />
         )}
       </button>
 
       {/* Panel — opens bottom-left from button */}
       {open && (
-        <div className="absolute right-0 top-12 z-50 rounded-2xl border border-gray-200 bg-white/95 backdrop-blur-xl p-5 shadow-2xl" style={{ width: "22rem" }}>
+        <div className="absolute right-0 top-12 z-50 rounded-2xl p-5 shadow-2xl" style={{ width: "22rem", background: "var(--bg-card)", border: "1px solid var(--border-strong)" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-900">AI Provider</h3>
             <button
@@ -192,7 +193,8 @@ export function ProviderSettings({ onChange }: ProviderSettingsProps) {
                 href={provider.apiKeyUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 text-xs text-violet-600 hover:text-violet-700 transition-colors"
+                className="inline-flex items-center gap-1 text-xs transition-colors"
+                style={{ color: "var(--brand)" }}
               >
                 Get key <ExternalLink className="h-3 w-3" />
               </a>
