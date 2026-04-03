@@ -8,13 +8,16 @@ import { ToolSelector } from "@/components/ToolSelector";
 import { OutputTypeSelector } from "@/components/OutputTypeSelector";
 import { FileUpload } from "@/components/FileUpload";
 import type { UserInput, ToolOverride, OutputTypeOverride } from "@/lib/prompt-engine";
+import type { ProviderConfig } from "@/components/ProviderSettings";
 
 interface InputPanelProps {
-  onSubmit: (input: UserInput) => void;
+  onSubmit: (input: UserInput, provider: ProviderConfig) => void;
   isLoading: boolean;
+  submitError?: string | null;
+  providerConfig: ProviderConfig;
 }
 
-export function InputPanel({ onSubmit, isLoading }: InputPanelProps) {
+export function InputPanel({ onSubmit, isLoading, submitError, providerConfig }: InputPanelProps) {
   const [idea, setIdea] = useState("");
   const [toolOverride, setToolOverride] = useState<ToolOverride>("auto");
   const [outputTypeOverride, setOutputTypeOverride] = useState<OutputTypeOverride>("auto");
@@ -34,14 +37,17 @@ export function InputPanel({ onSubmit, isLoading }: InputPanelProps) {
       return;
     }
     setError(null);
-    onSubmit({
-      rawIdea: idea.trim(),
-      contextText: contextText.trim(),
-      fileContent,
-      fileName,
-      toolOverride,
-      outputTypeOverride,
-    });
+    onSubmit(
+      {
+        rawIdea: idea.trim(),
+        contextText: contextText.trim(),
+        fileContent,
+        fileName,
+        toolOverride,
+        outputTypeOverride,
+      },
+      providerConfig
+    );
   }
 
   function handleFileLoad(content: string, name: string) {
@@ -163,6 +169,12 @@ export function InputPanel({ onSubmit, isLoading }: InputPanelProps) {
               </>
             )}
           </Button>
+
+          {submitError && (
+            <p className="mt-3 text-center text-sm text-red-600" role="alert">
+              {submitError}
+            </p>
+          )}
 
           <p className="mt-3 text-center text-xs text-gray-400">
             Press{" "}

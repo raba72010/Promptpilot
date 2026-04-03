@@ -8,12 +8,12 @@ import { SecondaryCard } from "@/components/SecondaryCard";
 import type { EngineOutput } from "@/lib/prompt-engine";
 
 interface ResultPanelProps {
-  output: EngineOutput;
+  output: EngineOutput & { providerLabel?: string };
   onStartOver: () => void;
 }
 
 export function ResultPanel({ output, onStartOver }: ResultPanelProps) {
-  const { intent, recommendation, promptPack } = output;
+  const { intent, recommendation, promptPack, providerLabel } = output;
   const {
     optimizedPrompt,
     systemInstructions,
@@ -37,7 +37,7 @@ export function ResultPanel({ output, onStartOver }: ResultPanelProps) {
       </div>
 
       {/* 1. Decision Summary */}
-      <DecisionSummary intent={intent} recommendation={recommendation} />
+      <DecisionSummary intent={intent} recommendation={recommendation} providerLabel={providerLabel} />
 
       {/* 2. Main Prompt */}
       <PromptCard prompt={optimizedPrompt} />
