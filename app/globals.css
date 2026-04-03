@@ -5,11 +5,26 @@
   --font-mono: var(--font-geist-mono);
 }
 
+/* ─── Design tokens ────────────────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #111111;
+  --background: #fafafa;
+  --foreground: #0a0a0a;
+
+  /* Purple/violet brand palette */
+  --brand-50:  #f5f3ff;
+  --brand-100: #ede9fe;
+  --brand-200: #ddd6fe;
+  --brand-500: #8b5cf6;
+  --brand-600: #7c3aed;
+  --brand-700: #6d28d9;
+
+  /* Mesh glow colors */
+  --glow-violet: rgba(139, 92, 246, 0.12);
+  --glow-indigo: rgba(99, 102, 241, 0.08);
+  --glow-pink:   rgba(236, 72, 153, 0.06);
 }
 
+/* ─── Base ─────────────────────────────────────────────────────── */
 body {
   background: var(--background);
   color: var(--foreground);
@@ -18,38 +33,156 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth scrolling */
 html {
   scroll-behavior: smooth;
 }
 
-/* Focus styles */
-:focus-visible {
-  outline-offset: 2px;
-}
-
-/* Remove default button styles */
 button {
   cursor: pointer;
 }
 
-/* Radix Select portal z-index */
+:focus-visible {
+  outline-offset: 2px;
+}
+
+/* ─── Mesh gradient background ─────────────────────────────────── */
+.page-bg {
+  position: relative;
+  isolation: isolate;
+}
+.page-bg::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, var(--glow-violet), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 20%, var(--glow-indigo), transparent 60%),
+    radial-gradient(ellipse 40% 35% at 10% 70%, var(--glow-pink), transparent 60%),
+    #fafafa;
+  pointer-events: none;
+}
+
+/* ─── Gradient text ─────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #0a0a0a 0%, #3b3b3b 50%, #6d28d9 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-text-muted {
+  background: linear-gradient(135deg, #9ca3af 0%, #c4b5fd 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ─── Glow button ───────────────────────────────────────────────── */
+.btn-glow {
+  position: relative;
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 100%);
+  box-shadow:
+    0 0 0 1px rgba(124, 58, 237, 0.3),
+    0 4px 16px rgba(124, 58, 237, 0.35),
+    0 1px 3px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s ease, transform 0.1s ease;
+}
+.btn-glow:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 1px rgba(124, 58, 237, 0.4),
+    0 6px 24px rgba(124, 58, 237, 0.45),
+    0 2px 6px rgba(0,0,0,0.12);
+  transform: translateY(-1px);
+}
+.btn-glow:active:not(:disabled) {
+  transform: translateY(0);
+}
+.btn-glow:disabled {
+  opacity: 0.55;
+  box-shadow: none;
+}
+
+/* ─── Glass card ────────────────────────────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 1px 3px rgba(0,0,0,0.04),
+    0 4px 16px rgba(0,0,0,0.04),
+    inset 0 1px 0 rgba(255,255,255,0.9);
+}
+
+/* ─── Brand border gradient ────────────────────────────────────── */
+.border-brand-gradient {
+  position: relative;
+}
+.border-brand-gradient::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, #c4b5fd, #818cf8, #c4b5fd);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.border-brand-gradient:focus-within::before,
+.border-brand-gradient:hover::before {
+  opacity: 1;
+}
+
+/* ─── Intent color chips ───────────────────────────────────────── */
+.intent-coding        { --intent-bg: #eff6ff; --intent-text: #1d4ed8; --intent-border: #bfdbfe; --intent-dot: #3b82f6; }
+.intent-writing       { --intent-bg: #fdf4ff; --intent-text: #7e22ce; --intent-border: #e9d5ff; --intent-dot: #a855f7; }
+.intent-research      { --intent-bg: #ecfdf5; --intent-text: #065f46; --intent-border: #a7f3d0; --intent-dot: #10b981; }
+.intent-image         { --intent-bg: #fff7ed; --intent-text: #c2410c; --intent-border: #fed7aa; --intent-dot: #f97316; }
+.intent-video         { --intent-bg: #fef2f2; --intent-text: #b91c1c; --intent-border: #fecaca; --intent-dot: #ef4444; }
+.intent-system_prompt { --intent-bg: #f0fdf4; --intent-text: #166534; --intent-border: #bbf7d0; --intent-dot: #22c55e; }
+.intent-agent_instructions { --intent-bg: #f0f9ff; --intent-text: #0369a1; --intent-border: #bae6fd; --intent-dot: #0ea5e9; }
+
+/* ─── Animations ────────────────────────────────────────────────── */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fade-in-fast {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.97); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.fade-in      { animation: fade-in      0.3s ease-out both; }
+.fade-in-fast { animation: fade-in-fast 0.15s ease-out both; }
+.scale-in     { animation: scale-in     0.25s ease-out both; }
+
+/* Loading shimmer */
+.shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(139,92,246,0.08) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+}
+
+/* ─── Scrollbar ─────────────────────────────────────────────────── */
+::-webkit-scrollbar        { width: 6px; height: 6px; }
+::-webkit-scrollbar-track  { background: transparent; }
+::-webkit-scrollbar-thumb  { background: #e2e8f0; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+
+/* ─── Radix Select portal ───────────────────────────────────────── */
 [data-radix-popper-content-wrapper] {
   z-index: 50 !important;
-}
-
-/* Fade-in animation */
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in {
-  animation: fade-in 0.25s ease-out both;
 }

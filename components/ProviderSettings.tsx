@@ -90,11 +90,11 @@ export function ProviderSettings({ onChange }: ProviderSettingsProps) {
         onClick={() => setOpen((o) => !o)}
         aria-label="AI provider settings"
         className={cn(
-          "inline-flex items-center justify-center rounded-xl w-10 h-10 border transition-colors",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900",
+          "inline-flex items-center justify-center rounded-xl w-10 h-10 border transition-all duration-200 shadow-sm",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-500",
           hasKey
-            ? "border-violet-200 bg-violet-50 text-violet-600 hover:bg-violet-100"
-            : "border-gray-200 bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+            ? "border-violet-200 bg-violet-50/80 backdrop-blur-sm text-violet-600 hover:bg-violet-100 hover:shadow-md"
+            : "border-gray-200 bg-white/80 backdrop-blur-sm text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300 hover:shadow-md"
         )}
       >
         <Settings className="h-4 w-4" />
@@ -105,7 +105,7 @@ export function ProviderSettings({ onChange }: ProviderSettingsProps) {
 
       {/* Panel — opens bottom-left from button */}
       {open && (
-        <div className="absolute right-0 top-12 z-50 rounded-2xl border border-gray-200 bg-white p-5 shadow-xl" style={{ width: "22rem" }}>
+        <div className="absolute right-0 top-12 z-50 rounded-2xl border border-gray-200 bg-white/95 backdrop-blur-xl p-5 shadow-2xl" style={{ width: "22rem" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-900">AI Provider</h3>
             <button
