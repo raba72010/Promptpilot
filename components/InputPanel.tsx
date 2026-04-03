@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef } from "react";
 import { ChevronDown, ChevronUp, Sparkles, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ToolSelector } from "@/components/ToolSelector";
 import { OutputTypeSelector } from "@/components/OutputTypeSelector";
 import { FileUpload } from "@/components/FileUpload";
-import { ProviderSettings } from "@/components/ProviderSettings";
 import type { UserInput, ToolOverride, OutputTypeOverride } from "@/lib/prompt-engine";
 import type { ProviderConfig } from "@/components/ProviderSettings";
 
@@ -15,9 +14,10 @@ interface InputPanelProps {
   onSubmit: (input: UserInput, provider: ProviderConfig) => void;
   isLoading: boolean;
   submitError?: string | null;
+  providerConfig: ProviderConfig;
 }
 
-export function InputPanel({ onSubmit, isLoading, submitError }: InputPanelProps) {
+export function InputPanel({ onSubmit, isLoading, submitError, providerConfig }: InputPanelProps) {
   const [idea, setIdea] = useState("");
   const [toolOverride, setToolOverride] = useState<ToolOverride>("auto");
   const [outputTypeOverride, setOutputTypeOverride] = useState<OutputTypeOverride>("auto");
@@ -26,16 +26,8 @@ export function InputPanel({ onSubmit, isLoading, submitError }: InputPanelProps
   const [fileContent, setFileContent] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [providerConfig, setProviderConfig] = useState<ProviderConfig>({
-    providerId: "anthropic",
-    apiKey: "",
-  });
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleProviderChange = useCallback((config: ProviderConfig) => {
-    setProviderConfig(config);
-  }, []);
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -139,7 +131,6 @@ export function InputPanel({ onSubmit, isLoading, submitError }: InputPanelProps
               onFileRemove={handleFileRemove}
               currentFile={fileName ? { name: fileName } : null}
             />
-            <ProviderSettings onChange={handleProviderChange} />
           </div>
 
           {/* Context Textarea */}

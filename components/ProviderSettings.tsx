@@ -84,31 +84,28 @@ export function ProviderSettings({ onChange }: ProviderSettingsProps) {
 
   return (
     <div className="relative" ref={panelRef}>
-      {/* Trigger */}
+      {/* Trigger — icon-only, clean */}
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-label="AI provider settings"
         className={cn(
-          "inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-sm transition-colors h-9",
+          "inline-flex items-center justify-center rounded-xl w-10 h-10 border transition-colors",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gray-900",
           hasKey
-            ? "border-violet-200 bg-violet-50 text-violet-700 hover:bg-violet-100"
-            : "border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+            ? "border-violet-200 bg-violet-50 text-violet-600 hover:bg-violet-100"
+            : "border-gray-200 bg-white text-gray-400 hover:text-gray-700 hover:bg-gray-50 hover:border-gray-300"
         )}
       >
-        <Settings className="h-3.5 w-3.5" />
-        <span className="hidden sm:inline">
-          {hasKey ? provider.label : "Set AI key"}
-        </span>
+        <Settings className="h-4 w-4" />
         {!hasKey && (
-          <span className="ml-0.5 h-1.5 w-1.5 rounded-full bg-yellow-400" title="API key required" />
+          <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-yellow-400 border border-white" />
         )}
       </button>
 
-      {/* Panel */}
+      {/* Panel — opens bottom-left from button */}
       {open && (
-        <div className="absolute left-0 top-11 z-50 w-84 rounded-2xl border border-gray-200 bg-white p-5 shadow-xl" style={{ width: "22rem" }}>
+        <div className="absolute right-0 top-12 z-50 rounded-2xl border border-gray-200 bg-white p-5 shadow-xl" style={{ width: "22rem" }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-900">AI Provider</h3>
             <button
