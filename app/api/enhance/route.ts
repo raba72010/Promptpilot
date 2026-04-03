@@ -1,132 +1,202 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import OpenAI from "openai";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { generatePrompt } from "@/lib/prompt-engine";
+import { getProvider } from "@/lib/providers";
 import type { UserInput } from "@/lib/prompt-engine";
+import type { ProviderId } from "@/lib/providers";
 
-export async function POST(request: NextRequest) {
-  let input: UserInput;
+interface EnhanceRequest extends UserInput {
+  providerId: ProviderId;
+  apiKey: string;
+}
 
-  try {
-    input = await request.json();
-  } catch {
-    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
-  }
+interface PromptPackResult {
+  optimizedPrompt: string;
+  systemInstructions?: string;
+  outputFormat?: string;
+  contextNotes?: string;
+  qualityChecklist: string[];
+  alternativeVersion?: string;
+}
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json(
-      { error: "ANTHROPIC_API_KEY is not configured. Add it in your Vercel project settings under Environment Variables." },
-      { status: 503 }
-    );
-  }
+// ─── Shared prompt builder ────────────────────────────────────────────────────
 
-  // Run deterministic engine for intent detection and tool recommendation
-  const { intent, recommendation } = generatePrompt(input);
-  const primaryTool = recommendation.primaryTool;
-  const altTool = recommendation.alternativeTool;
+function buildUserMessage(
+  input: UserInput,
+  primaryTool: string,
+  altTool: string | null,
+  intent: string,
+  contextBlock: string
+): string {
+  return `You are an expert prompt engineer. Generate the best possible zero-shot prompt for the task below.
 
-  // Build context block from optional inputs
-  const contextParts: string[] = [];
+Return ONLY a valid JSON object with these fields:
+- optimizedPrompt (string, required): The main optimized prompt for ${primaryTool}
+- systemInstructions (string, optional): System-level instructions if applicable
+- outputFormat (string, optional): Expected output structure description
+- contextNotes (string, optional): Notes on using provided context (only if context exists)
+- qualityChecklist (array of strings, required): 4-5 checklist items
+- alternativeVersion (string, optional): Alternative prompt for ${altTool ?? "another tool"}
+
+**User's request:** ${input.rawIdea.trim()}
+**Target AI tool:** ${primaryTool}
+**Detected intent:** ${intent}
+${contextBlock ? `\n${contextBlock}\n` : ""}
+The optimized prompt must:
+- Open with a specific role definition
+- Break the task into clear structured steps
+- Specify the exact output format
+- Include guardrails: "Do not invent missing information", "State assumptions before proceeding"
+- Be ready to paste directly into ${primaryTool} with zero modifications
+${altTool ? `\nAlso provide an alternativeVersion optimized for ${altTool}.` : ""}`;
+}
+
+function buildContextBlock(input: UserInput): string {
+  const parts: string[] = [];
   if (input.contextText?.trim()) {
-    contextParts.push(`Additional context from user:\n${input.contextText.trim()}`);
+    parts.push(`Additional context:\n${input.contextText.trim()}`);
   }
   if (input.fileContent && input.fileName) {
     const truncated =
       input.fileContent.length > 1500
         ? input.fileContent.slice(0, 1500) + "\n[...truncated]"
         : input.fileContent;
-    contextParts.push(`Attached file (${input.fileName}):\n${truncated}`);
+    parts.push(`Attached file (${input.fileName}):\n${truncated}`);
   }
-  const contextBlock = contextParts.join("\n\n");
+  return parts.join("\n\n");
+}
 
+function parseJsonResponse(text: string): PromptPackResult {
+  // Strip markdown code fences if present
+  const cleaned = text.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/```\s*$/i, "").trim();
+  return JSON.parse(cleaned);
+}
+
+// ─── Provider-specific callers ────────────────────────────────────────────────
+
+async function callAnthropic(apiKey: string, userMessage: string, model: string): Promise<PromptPackResult> {
   const client = new Anthropic({ apiKey });
-
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",
+    model,
     max_tokens: 2048,
     tool_choice: { type: "tool", name: "generate_prompt_pack" },
     tools: [
       {
         name: "generate_prompt_pack",
-        description: "Generate a complete optimized prompt pack for the user's request",
+        description: "Generate a complete optimized prompt pack",
         input_schema: {
           type: "object" as const,
           properties: {
-            optimizedPrompt: {
-              type: "string",
-              description: `The main optimized prompt, ready to paste directly into ${primaryTool}. Must include a clear role, structured task, explicit requirements, output format, and hallucination guardrails.`,
-            },
-            systemInstructions: {
-              type: "string",
-              description:
-                "System-level instructions to configure the AI (for system prompt or agent fields). Omit if not applicable.",
-            },
-            outputFormat: {
-              type: "string",
-              description:
-                "A concise description of the expected output structure. Omit if already covered in the main prompt.",
-            },
-            contextNotes: {
-              type: "string",
-              description:
-                "Brief notes on how to use the provided context. Only include if context was provided.",
-            },
-            qualityChecklist: {
-              type: "array",
-              items: { type: "string" },
-              description:
-                "4–5 checklist items to verify the prompt is complete and high-quality before using it.",
-            },
-            alternativeVersion: {
-              type: "string",
-              description: altTool
-                ? `A complete alternative prompt optimized specifically for ${altTool}, using that tool's conventions.`
-                : "A shorter, simpler fallback version of the prompt.",
-            },
+            optimizedPrompt: { type: "string" },
+            systemInstructions: { type: "string" },
+            outputFormat: { type: "string" },
+            contextNotes: { type: "string" },
+            qualityChecklist: { type: "array", items: { type: "string" } },
+            alternativeVersion: { type: "string" },
           },
           required: ["optimizedPrompt", "qualityChecklist"],
         },
       },
     ],
-    messages: [
-      {
-        role: "user",
-        content: `You are an expert prompt engineer. Generate the best possible zero-shot prompt for the task below.
-
-**User's request:** ${input.rawIdea.trim()}
-
-**Target AI tool:** ${primaryTool}
-**Detected intent category:** ${intent.intent}
-${contextBlock ? `\n${contextBlock}\n` : ""}
-Requirements for the optimized prompt:
-- Open with a specific role definition (e.g. "You are a senior software engineer...")
-- Break the task into clear, structured steps or sections
-- Specify the exact output format expected
-- Include explicit guardrails: "Do not invent missing information", "State assumptions before proceeding"
-- Be ready to paste directly into ${primaryTool} with zero modifications
-- Adapt tone and structure to ${primaryTool}'s strengths${altTool ? `\n\nAlso generate an alternative version optimized for ${altTool}, using its specific conventions and strengths.` : ""}
-
-The quality checklist should cover the most important things to verify before sending this prompt to an AI.`,
-      },
-    ],
+    messages: [{ role: "user", content: userMessage }],
   });
 
   const toolUse = response.content.find((b) => b.type === "tool_use");
-  if (!toolUse || toolUse.type !== "tool_use") {
+  if (!toolUse || toolUse.type !== "tool_use") throw new Error("No tool use in Anthropic response");
+  return toolUse.input as PromptPackResult;
+}
+
+async function callOpenAICompat(
+  apiKey: string,
+  baseUrl: string,
+  model: string,
+  userMessage: string
+): Promise<PromptPackResult> {
+  const client = new OpenAI({ apiKey, baseURL: baseUrl });
+  const response = await client.chat.completions.create({
+    model,
+    max_tokens: 2048,
+    response_format: { type: "json_object" },
+    messages: [
+      {
+        role: "system",
+        content: "You are an expert prompt engineer. Always respond with valid JSON only. No prose, no markdown fences.",
+      },
+      { role: "user", content: userMessage },
+    ],
+  });
+
+  const text = response.choices[0]?.message?.content ?? "";
+  return parseJsonResponse(text);
+}
+
+async function callGemini(apiKey: string, model: string, userMessage: string): Promise<PromptPackResult> {
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const geminiModel = genAI.getGenerativeModel({
+    model,
+    generationConfig: {
+      responseMimeType: "application/json",
+      maxOutputTokens: 2048,
+    },
+  });
+
+  const result = await geminiModel.generateContent(
+    "You are an expert prompt engineer. Respond with valid JSON only.\n\n" + userMessage
+  );
+  const text = result.response.text();
+  return parseJsonResponse(text);
+}
+
+// ─── Main handler ─────────────────────────────────────────────────────────────
+
+export async function POST(request: NextRequest) {
+  let body: EnhanceRequest;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
+  }
+
+  const { providerId, apiKey, ...input } = body;
+
+  if (!apiKey?.trim()) {
     return NextResponse.json(
-      { error: "AI did not return a valid prompt pack. Please try again." },
-      { status: 500 }
+      { error: "No API key provided. Configure your AI provider in Settings." },
+      { status: 400 }
     );
   }
 
-  const pack = toolUse.input as {
-    optimizedPrompt: string;
-    systemInstructions?: string;
-    outputFormat?: string;
-    contextNotes?: string;
-    qualityChecklist: string[];
-    alternativeVersion?: string;
-  };
+  const provider = getProvider(providerId ?? "anthropic");
+  const { intent, recommendation } = generatePrompt(input);
+  const contextBlock = buildContextBlock(input);
+  const userMessage = buildUserMessage(
+    input,
+    recommendation.primaryTool,
+    recommendation.alternativeTool,
+    intent.intent,
+    contextBlock
+  );
+
+  let pack: PromptPackResult;
+
+  try {
+    if (provider.sdk === "anthropic") {
+      pack = await callAnthropic(apiKey, userMessage, provider.model);
+    } else if (provider.sdk === "gemini") {
+      pack = await callGemini(apiKey, provider.model, userMessage);
+    } else {
+      pack = await callOpenAICompat(apiKey, provider.openAICompatibleBaseUrl!, provider.model, userMessage);
+    }
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Unknown error";
+    console.error(`[/api/enhance] ${provider.name} error:`, message);
+    return NextResponse.json(
+      { error: `${provider.name} API error: ${message}` },
+      { status: 502 }
+    );
+  }
 
   return NextResponse.json({
     intent,
@@ -138,9 +208,9 @@ The quality checklist should cover the most important things to verify before se
       contextNotes:
         pack.contextNotes ??
         (contextBlock ? "Context has been incorporated into the prompt above." : undefined),
-      qualityChecklist: pack.qualityChecklist,
+      qualityChecklist: pack.qualityChecklist ?? [],
       alternativeVersion: pack.alternativeVersion ?? undefined,
     },
-    aiEnhanced: true,
+    providerLabel: provider.label,
   });
 }
