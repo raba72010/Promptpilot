@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { InputPanel } from "@/components/InputPanel";
 import { ResultPanel } from "@/components/ResultPanel";
 import { ProviderSettings } from "@/components/ProviderSettings";
 import { getProvider } from "@/lib/providers";
+import { usePromptHistory } from "@/hooks/usePromptHistory";
 import type { UserInput, EngineOutput, IntentResult, ToolRecommendation } from "@/lib/prompt-engine";
 import type { ProviderConfig } from "@/components/ProviderSettings";
 
@@ -22,17 +23,19 @@ export default function Home() {
   const [output, setOutput]                 = useState<EngineOutput | null>(null);
   const [providerLabel, setProviderLabel]   = useState("");
   const [submitError, setSubmitError]       = useState<string | null>(null);
-  const [providerConfig, setProviderConfig] = useState<ProviderConfig>({
-    providerId: "groq",
-    apiKey: "",
-  });
+  const [providerConfig, setProviderConfig] = useState<ProviderConfig>({ providerId: "groq", apiKey: "" });
+
+  // Remember last input so Regenerate can replay it
+  const lastInputRef    = useRef<UserInput | null>(null);
+  const lastProviderRef = useRef<ProviderConfig | null>(null);
+
+  const { history, addEntry } = usePromptHistory();
 
   const handleProviderChange = useCallback((config: ProviderConfig) => {
     setProviderConfig(config);
   }, []);
 
-  const handleSubmit = useCallback(async (input: UserInput, provider: ProviderConfig) => {
-    // Reset everything
+  const runEnhance = useCallback(async (input: UserInput, provider: ProviderConfig) => {
     setState("analyzing");
     setSubmitError(null);
     setPartialOutput(null);
@@ -47,7 +50,6 @@ export default function Home() {
       });
 
       if (!res.ok || !res.body) {
-        // Non-streaming error response
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? `HTTP ${res.status}`);
       }
@@ -55,8 +57,6 @@ export default function Home() {
       const reader  = res.body.getReader();
       const decoder = new TextDecoder();
       let lineBuffer = "";
-
-      // Accumulated streamed text — used as fallback if done.pack.optimizedPrompt differs
       let accumulated = "";
       let latestPartial: PartialOutput | null = null;
 
@@ -66,7 +66,7 @@ export default function Home() {
 
         lineBuffer += decoder.decode(value, { stream: true });
         const lines = lineBuffer.split("\n");
-        lineBuffer  = lines.pop() ?? "";          // keep incomplete line
+        lineBuffer  = lines.pop() ?? "";
 
         for (const line of lines) {
           if (!line.trim()) continue;
@@ -74,25 +74,19 @@ export default function Home() {
           try { msg = JSON.parse(line); } catch { continue; }
 
           if (msg.type === "meta") {
-            // Intent + recommendation arrived — show the result skeleton
-            latestPartial = {
-              intent:         msg.intent as IntentResult,
-              recommendation: msg.recommendation as ToolRecommendation,
-            };
+            latestPartial = { intent: msg.intent as IntentResult, recommendation: msg.recommendation as ToolRecommendation };
             setPartialOutput(latestPartial);
             setState("streaming");
 
           } else if (msg.type === "delta") {
-            // Live token — append to streamed text
             const text = msg.text as string;
             accumulated += text;
             setStreamedPrompt((p) => p + text);
 
           } else if (msg.type === "done") {
-            // Full pack arrived — use streamed text (more accurate) or fallback
             const pack = msg.pack as Record<string, unknown> & { optimizedPrompt?: string };
             const finalPrompt = accumulated.trim() || (pack.optimizedPrompt as string) || "";
-            setOutput({
+            const finalOutput: EngineOutput = {
               intent:         latestPartial!.intent,
               recommendation: latestPartial!.recommendation,
               promptPack: {
@@ -103,9 +97,12 @@ export default function Home() {
                 qualityChecklist:   (pack.qualityChecklist  as string[]) ?? [],
                 alternativeVersion: pack.alternativeVersion as string | undefined,
               },
-            });
+            };
+            setOutput(finalOutput);
             setProviderLabel(msg.providerLabel as string);
             setState("result");
+            // Save to history
+            addEntry(input.rawIdea, latestPartial!.recommendation.primaryTool);
 
           } else if (msg.type === "error") {
             throw new Error(msg.message as string);
@@ -113,7 +110,6 @@ export default function Home() {
         }
       }
 
-      // If state never reached "result" (e.g. stream ended without done packet)
       setState((s) => (s === "streaming" ? "error" : s));
       setSubmitError((e) => e ?? "Stream ended unexpectedly. Please try again.");
 
@@ -126,7 +122,19 @@ export default function Home() {
           : "Something went wrong. Please try again."
       );
     }
-  }, []);
+  }, [addEntry]);
+
+  const handleSubmit = useCallback((input: UserInput, provider: ProviderConfig) => {
+    lastInputRef.current    = input;
+    lastProviderRef.current = provider;
+    return runEnhance(input, provider);
+  }, [runEnhance]);
+
+  const handleRegenerate = useCallback(() => {
+    if (lastInputRef.current && lastProviderRef.current) {
+      runEnhance(lastInputRef.current, lastProviderRef.current);
+    }
+  }, [runEnhance]);
 
   const handleStartOver = useCallback(() => {
     setState("idle");
@@ -142,7 +150,6 @@ export default function Home() {
 
   return (
     <>
-      {/* Fixed settings — always visible */}
       <div className="fixed top-4 right-4 z-40">
         <ProviderSettings onChange={handleProviderChange} />
       </div>
@@ -152,16 +159,14 @@ export default function Home() {
           output={output}
           providerLabel={providerLabel}
           onStartOver={handleStartOver}
+          onRegenerate={handleRegenerate}
         />
       ) : state === "streaming" && partialOutput ? (
         <ResultPanel
           output={{
             intent:         partialOutput.intent,
             recommendation: partialOutput.recommendation,
-            promptPack: {
-              optimizedPrompt:  streamedPrompt,
-              qualityChecklist: [],
-            },
+            promptPack:     { optimizedPrompt: streamedPrompt, qualityChecklist: [] },
           }}
           providerLabel={activeProviderLabel}
           onStartOver={handleStartOver}
@@ -175,6 +180,7 @@ export default function Home() {
           providerConfig={providerConfig}
           activeProviderLabel={activeProviderLabel}
           hasApiKey={hasApiKey}
+          history={history}
         />
       )}
     </>
