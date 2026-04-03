@@ -3,6 +3,8 @@ export type ProviderId =
   | "openai"
   | "gemini"
   | "groq"
+  | "cerebras"
+  | "openrouter"
   | "mistral"
   | "perplexity"
   | "together"
@@ -13,48 +15,33 @@ export type ProviderId =
 export interface ProviderMeta {
   id: ProviderId;
   name: string;
-  label: string; // short display name
+  label: string;
   model: string;
   apiKeyLabel: string;
   apiKeyPlaceholder: string;
   apiKeyUrl: string;
-  /** If set, uses OpenAI-compatible SDK with this base URL */
   openAICompatibleBaseUrl?: string;
-  /** Special SDK handling */
   sdk: "anthropic" | "openai-compat" | "gemini";
+  /** Has a meaningful free tier — no credit card required to get started */
+  freeTier: boolean;
+  /** One-line note shown in the UI about the free tier */
+  freeTierNote?: string;
 }
 
 export const PROVIDERS: ProviderMeta[] = [
+  // ── Free tier ──────────────────────────────────────────────────────────────
   {
-    id: "anthropic",
-    name: "Claude (Anthropic)",
-    label: "Claude",
-    model: "claude-sonnet-4-6",
-    apiKeyLabel: "Anthropic API Key",
-    apiKeyPlaceholder: "sk-ant-...",
-    apiKeyUrl: "https://console.anthropic.com/",
-    sdk: "anthropic",
-  },
-  {
-    id: "openai",
-    name: "GPT-4o (OpenAI)",
-    label: "GPT-4o",
-    model: "gpt-4o",
-    apiKeyLabel: "OpenAI API Key",
-    apiKeyPlaceholder: "sk-...",
-    apiKeyUrl: "https://platform.openai.com/api-keys",
+    id: "cerebras",
+    name: "Llama 3.3 70B (Cerebras)",
+    label: "Cerebras",
+    model: "llama-3.3-70b",
+    apiKeyLabel: "Cerebras API Key",
+    apiKeyPlaceholder: "csk-...",
+    apiKeyUrl: "https://cloud.cerebras.ai/",
     sdk: "openai-compat",
-    openAICompatibleBaseUrl: "https://api.openai.com/v1",
-  },
-  {
-    id: "gemini",
-    name: "Gemini 2.0 Flash (Google)",
-    label: "Gemini",
-    model: "gemini-2.0-flash",
-    apiKeyLabel: "Google AI API Key",
-    apiKeyPlaceholder: "AIza...",
-    apiKeyUrl: "https://aistudio.google.com/app/apikey",
-    sdk: "gemini",
+    openAICompatibleBaseUrl: "https://api.cerebras.cloud/v1",
+    freeTier: true,
+    freeTierNote: "Free — no credit card required",
   },
   {
     id: "groq",
@@ -66,28 +53,33 @@ export const PROVIDERS: ProviderMeta[] = [
     apiKeyUrl: "https://console.groq.com/keys",
     sdk: "openai-compat",
     openAICompatibleBaseUrl: "https://api.groq.com/openai/v1",
+    freeTier: true,
+    freeTierNote: "Free tier — generous rate limits",
   },
   {
-    id: "mistral",
-    name: "Mistral Large (Mistral AI)",
-    label: "Mistral",
-    model: "mistral-large-latest",
-    apiKeyLabel: "Mistral API Key",
-    apiKeyPlaceholder: "...",
-    apiKeyUrl: "https://console.mistral.ai/api-keys/",
-    sdk: "openai-compat",
-    openAICompatibleBaseUrl: "https://api.mistral.ai/v1",
+    id: "gemini",
+    name: "Gemini 2.0 Flash (Google)",
+    label: "Gemini",
+    model: "gemini-2.0-flash",
+    apiKeyLabel: "Google AI API Key",
+    apiKeyPlaceholder: "AIza...",
+    apiKeyUrl: "https://aistudio.google.com/app/apikey",
+    sdk: "gemini",
+    freeTier: true,
+    freeTierNote: "Free tier via Google AI Studio",
   },
   {
-    id: "perplexity",
-    name: "Sonar Pro (Perplexity)",
-    label: "Perplexity",
-    model: "sonar-pro",
-    apiKeyLabel: "Perplexity API Key",
-    apiKeyPlaceholder: "pplx-...",
-    apiKeyUrl: "https://www.perplexity.ai/settings/api",
+    id: "openrouter",
+    name: "Free Models (OpenRouter)",
+    label: "OpenRouter",
+    model: "meta-llama/llama-3.3-70b-instruct:free",
+    apiKeyLabel: "OpenRouter API Key",
+    apiKeyPlaceholder: "sk-or-...",
+    apiKeyUrl: "https://openrouter.ai/keys",
     sdk: "openai-compat",
-    openAICompatibleBaseUrl: "https://api.perplexity.ai",
+    openAICompatibleBaseUrl: "https://openrouter.ai/api/v1",
+    freeTier: true,
+    freeTierNote: "Many models free — uses :free variants",
   },
   {
     id: "together",
@@ -99,6 +91,57 @@ export const PROVIDERS: ProviderMeta[] = [
     apiKeyUrl: "https://api.together.ai/settings/api-keys",
     sdk: "openai-compat",
     openAICompatibleBaseUrl: "https://api.together.xyz/v1",
+    freeTier: true,
+    freeTierNote: "Free $1 credit on signup",
+  },
+
+  // ── Paid ───────────────────────────────────────────────────────────────────
+  {
+    id: "anthropic",
+    name: "Claude (Anthropic)",
+    label: "Claude",
+    model: "claude-sonnet-4-6",
+    apiKeyLabel: "Anthropic API Key",
+    apiKeyPlaceholder: "sk-ant-...",
+    apiKeyUrl: "https://console.anthropic.com/",
+    sdk: "anthropic",
+    freeTier: false,
+  },
+  {
+    id: "openai",
+    name: "GPT-4o (OpenAI)",
+    label: "GPT-4o",
+    model: "gpt-4o",
+    apiKeyLabel: "OpenAI API Key",
+    apiKeyPlaceholder: "sk-...",
+    apiKeyUrl: "https://platform.openai.com/api-keys",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://api.openai.com/v1",
+    freeTier: false,
+  },
+  {
+    id: "mistral",
+    name: "Mistral Large (Mistral AI)",
+    label: "Mistral",
+    model: "mistral-large-latest",
+    apiKeyLabel: "Mistral API Key",
+    apiKeyPlaceholder: "...",
+    apiKeyUrl: "https://console.mistral.ai/api-keys/",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://api.mistral.ai/v1",
+    freeTier: false,
+  },
+  {
+    id: "perplexity",
+    name: "Sonar Pro (Perplexity)",
+    label: "Perplexity",
+    model: "sonar-pro",
+    apiKeyLabel: "Perplexity API Key",
+    apiKeyPlaceholder: "pplx-...",
+    apiKeyUrl: "https://www.perplexity.ai/settings/api",
+    sdk: "openai-compat",
+    openAICompatibleBaseUrl: "https://api.perplexity.ai",
+    freeTier: false,
   },
   {
     id: "deepseek",
@@ -110,6 +153,7 @@ export const PROVIDERS: ProviderMeta[] = [
     apiKeyUrl: "https://platform.deepseek.com/api_keys",
     sdk: "openai-compat",
     openAICompatibleBaseUrl: "https://api.deepseek.com/v1",
+    freeTier: false,
   },
   {
     id: "xai",
@@ -121,6 +165,7 @@ export const PROVIDERS: ProviderMeta[] = [
     apiKeyUrl: "https://console.x.ai/",
     sdk: "openai-compat",
     openAICompatibleBaseUrl: "https://api.x.ai/v1",
+    freeTier: false,
   },
   {
     id: "cohere",
@@ -132,10 +177,14 @@ export const PROVIDERS: ProviderMeta[] = [
     apiKeyUrl: "https://dashboard.cohere.com/api-keys",
     sdk: "openai-compat",
     openAICompatibleBaseUrl: "https://api.cohere.ai/compatibility/v1",
+    freeTier: false,
   },
 ];
 
-export const DEFAULT_PROVIDER_ID: ProviderId = "anthropic";
+export const FREE_PROVIDERS = PROVIDERS.filter((p) => p.freeTier);
+export const PAID_PROVIDERS = PROVIDERS.filter((p) => !p.freeTier);
+
+export const DEFAULT_PROVIDER_ID: ProviderId = "groq";
 
 export function getProvider(id: ProviderId): ProviderMeta {
   return PROVIDERS.find((p) => p.id === id) ?? PROVIDERS[0];
