@@ -9,11 +9,10 @@ import type { EngineOutput } from "@/lib/prompt-engine";
 
 interface ResultPanelProps {
   output: EngineOutput;
-  aiEnhanced: boolean;
   onStartOver: () => void;
 }
 
-export function ResultPanel({ output, aiEnhanced, onStartOver }: ResultPanelProps) {
+export function ResultPanel({ output, onStartOver }: ResultPanelProps) {
   const { intent, recommendation, promptPack } = output;
   const {
     optimizedPrompt,
@@ -38,7 +37,7 @@ export function ResultPanel({ output, aiEnhanced, onStartOver }: ResultPanelProp
       </div>
 
       {/* 1. Decision Summary */}
-      <DecisionSummary intent={intent} recommendation={recommendation} aiEnhanced={aiEnhanced} />
+      <DecisionSummary intent={intent} recommendation={recommendation} />
 
       {/* 2. Main Prompt */}
       <PromptCard prompt={optimizedPrompt} />
