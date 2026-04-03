@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { InputPanel } from "@/components/InputPanel";
 import { ResultPanel } from "@/components/ResultPanel";
 import { ProviderSettings } from "@/components/ProviderSettings";
+import { getProvider } from "@/lib/providers";
 import type { UserInput, EngineOutput } from "@/lib/prompt-engine";
 import type { ProviderConfig } from "@/components/ProviderSettings";
 
@@ -12,6 +13,7 @@ type AppState = "idle" | "loading" | "result" | "error";
 export default function Home() {
   const [state, setState] = useState<AppState>("idle");
   const [output, setOutput] = useState<EngineOutput | null>(null);
+  const [providerLabel, setProviderLabel] = useState<string>("");
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [providerConfig, setProviderConfig] = useState<ProviderConfig>({
     providerId: "groq",
@@ -38,8 +40,10 @@ export default function Home() {
         throw new Error(body.error ?? `HTTP ${res.status}`);
       }
 
-      const data: EngineOutput = await res.json();
-      setOutput(data);
+      const data = await res.json();
+      const { providerLabel: label, ...engineOutput } = data;
+      setOutput(engineOutput as EngineOutput);
+      setProviderLabel(label ?? getProvider(provider.providerId).label);
       setState("result");
     } catch (err) {
       console.error("Enhance request failed:", err);
@@ -55,8 +59,12 @@ export default function Home() {
   const handleStartOver = useCallback(() => {
     setState("idle");
     setOutput(null);
+    setProviderLabel("");
     setSubmitError(null);
   }, []);
+
+  const activeProviderLabel = getProvider(providerConfig.providerId).label;
+  const hasApiKey = providerConfig.apiKey.trim().length > 0;
 
   return (
     <>
@@ -66,13 +74,19 @@ export default function Home() {
       </div>
 
       {state === "result" && output ? (
-        <ResultPanel output={output} onStartOver={handleStartOver} />
+        <ResultPanel
+          output={output}
+          providerLabel={providerLabel}
+          onStartOver={handleStartOver}
+        />
       ) : (
         <InputPanel
           onSubmit={handleSubmit}
           isLoading={state === "loading"}
           submitError={state === "error" ? submitError : null}
           providerConfig={providerConfig}
+          activeProviderLabel={activeProviderLabel}
+          hasApiKey={hasApiKey}
         />
       )}
     </>
